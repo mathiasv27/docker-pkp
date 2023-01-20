@@ -17,7 +17,7 @@ ARG BUILD_PKP_TOOL                  \
 RUN apk add --update --no-cache curl tar \
     && mkdir "${BUILD_PKP_APP_PATH}" 
 
-WORKDIR "/${BUILD_PKP_APP_PATH}"
+WORKDIR "${BUILD_PKP_APP_PATH}"
 
 # ADD is supossed to download, extract and remove, but there is an issue with some docker
 # versions so, for compatibility, doing it manually: https://github.com/moby/moby/issues/33849 
@@ -80,6 +80,7 @@ ENV PACKAGES        \
     rsyslog         \
     apache2-utils   \
     ca-certificates \
+    git             \
     vim
 
 # DEV packages are not required in production images.
@@ -89,60 +90,42 @@ ENV PACKAGES_DEV    \
     libonig-dev     \
     libpng-dev      \
     libxslt-dev     \
-    libzip-dev
+    libzip-dev      \
+    libbz2-dev      \
+    libssl-dev      \
+    libxml2-dev
+#    libcurl4-openssl-dev    \
 
 # PHP extensions
 ENV PHP_EXTENSIONS  \
     gd \
     gettext \
-    iconv \
     intl \
-    mbstring \
-    mysqli \
     pdo_mysql \
-    xml \
-    xsl \
-    zip
+    mysqli \
+    zip \
+    bz2	\
+	exif \
+	phar \
+	posix \
+	session \
+	shmop \
+	simplexml \
+	sockets \
+	calendar \
+	opcache \
+	sysvmsg \
+	sysvsem \
+	sysvshm \
+	tokenizer \
+	xml
+
+
+# Already included in php compilation :
+# mbstring  ctype  curl  dom  fileinfo  ftp  iconv  xml (xmlreader  xmlwriter included in php8)  openssl
 
 # Possible values are:
 # bcmath bz2 calendar ctype curl dba dom enchant exif ffi fileinfo filter ftp gd gettext gmp hash iconv imap intl json ldap mbstring mysqli oci8 odbc opcache pcntl pdo pdo_dblib pdo_firebird pdo_mysql pdo_oci pdo_odbc pdo_pgsql pdo_sqlite pgsql phar posix pspell readline reflection session shmop simplexml snmp soap sockets sodium spl standard sysvmsg sysvsem sysvshm tidy tokenizer xml xmlreader xmlwriter xsl zend_test zip
-
-
-# ENV PHP_EXTENSIONS  \
-# 	php8-bcmath     \
-# 	php8-bz2        \
-# 	php8-calendar   \
-# 	php8-ctype      \
-# 	php8-curl       \
-# 	php8-dom        \
-# 	php8-exif       \
-# 	php8-fileinfo   \
-# 	php8-ftp        \
-# 	php8-gettext    \
-# 	php8-intl       \
-# 	php8-iconv      \
-# 	php8-json       \
-# 	php8-mbstring   \
-# 	php8-mysqli     \
-# 	php8-opcache    \
-# 	php8-openssl    \
-# 	php8-pdo_mysql  \
-# 	php8-phar       \
-# 	php8-posix      \
-# 	php8-session    \
-# 	php8-shmop      \
-# 	php8-simplexml  \
-# 	php8-sockets    \
-# 	php8-sysvmsg    \
-# 	php8-sysvsem    \
-# 	php8-sysvshm    \
-# 	php8-tokenizer  \
-# 	php8-xml        \
-# 	php8-xmlreader  \
-# 	php8-xmlwriter  \
-# 	php8-zip        \
-# 	php8-zlib
-
 
 WORKDIR ${WWW_PATH_ROOT}/html
 
@@ -157,10 +140,13 @@ RUN docker-php-ext-install -j$(nproc) ${PHP_EXTENSIONS}
 
 RUN docker-php-ext-enable ${PHP_EXTENSIONS}
 
+RUN pecl install xdebug && docker-php-ext-enable xdebug
+
 # Enable mod_rewrite and mod_ssl
 RUN a2enmod rewrite ssl
 
 # Building PKP-TOOL (ie: OJS):
+
 
 # Get the code
 COPY --from=pkp_code "${BUILD_PKP_APP_PATH}" .
@@ -198,7 +184,7 @@ RUN echo "${BUILD_PKP_TOOL}-${BUILD_PKP_VERSION} [build:" $(date "+%Y%m%d-%H%M%S
 EXPOSE 80 
 EXPOSE 443
 
-VOLUME [ "${WWW_PATH_ROOT}/files", "${WWW_PATH_ROOT}/public" ]
+VOLUME [ "${WWW_PATH_ROOT}/files", "${WWW_PATH_ROOT}/html" ]
 
 RUN chmod +x "/usr/local/bin/${BUILD_PKP_TOOL}-start"
 

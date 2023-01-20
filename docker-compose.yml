@@ -3,7 +3,7 @@
 
 services:
   db:
-    image: mariadb:10.2
+    image: mariadb:10.9
     env_file:
       - .env
     container_name: "pkp_db_${COMPOSE_PROJECT_NAME:-demo}"
@@ -12,17 +12,17 @@ services:
       MYSQL_DATABASE: "${MYSQL_DATABASE:-pkp}"
       MYSQL_USER: "${MYSQL_USER:-pkp}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD:-pkpPwd}"
-#    volumes:
-#      - ./volumes/db:/var/lib/mysql
-#      - ./volumes/logs/db:/var/log/mysql
+    volumes:
+      - sql_mariadb:/var/lib/mysql
+      - ./volumes/logs/db:/var/log/mysql
 #      - ./volumes/config/db.charset.conf:/etc/mysql/conf.d/charset.cnf
-#      - ./volumes/migration:/docker-entrypoint-initdb.d
+      - ./volumes/migration:/docker-entrypoint-initdb.d
     networks:
       - inside
     restart: always
 
   app:
-    image: local/${PKP_TOOL}:3_3_0-13
+    image: local/${PKP_TOOL}:${PKP_VERSION}
     build: 
       context: .
       dockerfile: Dockerfile
@@ -36,9 +36,10 @@ services:
     volumes:
       # Keep host and container sync:
       - /etc/localtime:/etc/localtime
-#      - ./volumes/private:/var/www/files
+      - files:/var/www/files
 #      - ./volumes/public:/var/www/html/public
-#      - ./volumes/logs/app:/var/log/apache2
+      - html:/var/www/html
+      - ./volumes/logs/app:/var/log/apache2
 #      # WARNING: You can only enable file-volumes if file exists in the container.
 #      - ./volumes/config/ojs.config.inc.php:/var/www/html/config.inc.php
       - ./volumes/config/apache.htaccess:/var/www/html/.htaccess
@@ -53,3 +54,18 @@ services:
 networks:
   inside:
     external: false
+
+volumes:
+  sql_mariadb:
+  html:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "./volumes/html"
+  files:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "./volumes/files"

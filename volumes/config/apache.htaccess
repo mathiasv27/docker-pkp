@@ -1,16 +1,34 @@
 php_flag log_errors On
 php_value error_log /var/log/apache2/php-errors.log
 
-#AcceptPathInfo On                                                                 
+#AcceptPathInfo On
      
 SetEnv HTTPS On
 PassEnv HTTPS
 SetEnvIf X-Forwarded-Proto "^https$" HTTPS=on
 
 <IfModule mod_rewrite.c>
+
     RewriteEngine On
     RewriteBase /
+
+    # Normal request processing
     RewriteRule ^api/v1(.*)$ /index.php/api/v1$1 [L,R=307]
     RewriteCond %{REQUEST_FILENAME} !-f
+    # Ignore if request is for a known OJS directory (Apache 2.2+)
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-d
+    # Ignore if request is for a known OJS file (Apache 2.2+)
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-f
+
     RewriteRule ^(.*)$ /index.php/$1 [QSA,L]
+
+    # Security on public uploaded files
+    # No access to public/site/images from external website
+    RewriteCond %{HTTP_REFERER} !^https://$PROJECT_DOMAIN [NC]
+    RewriteCond %{REQUEST_URI} ^/public/site/.*$ [NC]
+    RewriteRule . - [F]
+
+#    Redirect "/index.php/jtestub/index" "/index.php/jtestub"
+
+
 </IfModule>

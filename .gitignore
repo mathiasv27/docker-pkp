@@ -1,3 +1,6 @@
 .swp
 .sandbox
 older
+/volumes/html/*
+/volumes/logs/*
+/volumes/files/*
