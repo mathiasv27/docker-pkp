@@ -37,8 +37,9 @@ services:
       # Keep host and container sync:
       - /etc/localtime:/etc/localtime
       - files:/var/www/files
-#      - ./volumes/public:/var/www/html/public
       - html:/var/www/html
+      - public:/var/www/html/public
+      - ./volumes/prepare/ojs-specific.sh:/usr/local/bin/ojs-specific
       - ./volumes/logs/app:/var/log/apache2
 #      # WARNING: You can only enable file-volumes if file exists in the container.
 #      - ./volumes/config/ojs.config.inc.php:/var/www/html/config.inc.php
@@ -62,10 +63,16 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: "./volumes/html"
+      device: '\\wsl.localhost\Ubuntu-22.04\home\mvitalis\docker-volumes\html'
   files:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: "./volumes/files"
+      device: '\\wsl.localhost\Ubuntu-22.04\home\mvitalis\docker-volumes\files'
+  public:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: '\\wsl.localhost\Ubuntu-22.04\home\mvitalis\docker-volumes\public'

@@ -4,3 +4,4 @@ older
 /volumes/html/*
 /volumes/logs/*
 /volumes/files/*
+volumes/migration/ojs_database_fulldump_3_3_after_urpgrade.sql
